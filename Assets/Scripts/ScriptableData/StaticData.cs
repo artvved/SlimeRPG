@@ -12,5 +12,6 @@ namespace ScritableData
         public float DistanceBetweenFight;
         public float PlayerRange;
         public PlayerView PlayerPrefab;
+        public EnemyView EnemyPrefab;
     }
 }
