@@ -6,18 +6,19 @@ using Leopotam.EcsLite.Di;
 using Mitfart.LeoECSLite.UnityIntegration;
 using ScritableData;
 using UnityEngine;
-using NotImplementedException = System.NotImplementedException;
+
 
 namespace Game.System
 {
-    public class MoveUnitSystem : IEcsInitSystem, IEcsRunSystem
+    public class MoveSystem : IEcsInitSystem, IEcsRunSystem
     {
         private EcsWorld world;
       
-        readonly EcsPoolInject<UnitViewComponent> unitTransformPool=default;
+        readonly EcsPoolInject<BaseViewComponent> transformPool=default;
         readonly EcsPoolInject<TravelledDistanceComponent> travelPool=default;
         readonly EcsPoolInject<CantMoveComponent> cantMovePool = default;
         readonly EcsPoolInject<SpeedComponent> speedPool = default;
+        readonly EcsPoolInject<DirectionMoveComponent> directionPool = default;
 
         private EcsFilter unitTransformFilter;
        
@@ -25,9 +26,9 @@ namespace Game.System
         public void Init(IEcsSystems systems)
         {
             world = systems.GetWorld();
-            unitTransformFilter = world.Filter<UnitViewComponent>()
-                .Inc<TravelledDistanceComponent>()
-                .Inc<UnitComponent>()
+            unitTransformFilter = world.Filter<SpeedComponent>()
+                .Inc<DirectionMoveComponent>()
+                .Inc<BaseViewComponent>()
                 .End();
         }
 
@@ -38,10 +39,18 @@ namespace Game.System
                 if (cantMovePool.Value.Has(entity))
                     continue;
                 var speed = speedPool.Value.Get(entity).Value;
-                var valueTransform = unitTransformPool.Value.Get(entity).Value.transform;
-                var delta = Time.deltaTime * speed * Vector3.right;
+                var direction = directionPool.Value.Get(entity).Value;
+                var valueTransform = transformPool.Value.Get(entity).Value.transform;
+                
+                var delta = Time.deltaTime * speed * direction;
                 valueTransform.position += delta;
-                travelPool.Value.Get(entity).Value += delta.x;
+                
+                //calc distance between fights
+                if (travelPool.Value.Has(entity))
+                {
+                    travelPool.Value.Get(entity).Value += delta.x;
+                }
+               
 
             }
         }
